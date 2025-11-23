@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  username      String    @unique
+  email         String?   @unique
+  phone         String?   @unique
+  password      String
+  gender        String?
+  birthdate     DateTime?
+  avatarUrl     String?
+  avatarPublicId String?
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  notificationSettings NotificationSettings?
+  privacySettings      PrivacySettings?
+  authMethod           AuthMethod?
+
+  // User activity
+  favorites       Favorite[]
+  recentlyPlayed  RecentlyPlayed[]
+  following       FollowingArtist[]
+}
+
+model NotificationSettings {
+  id                Int    @id @default(autoincrement())
+  userId            Int    @unique
+  emailNewRelease   Boolean @default(false)
+  emailWeeklyMix    Boolean @default(false)
+  emailConcert      Boolean @default(false)
+  emailAccountEvent Boolean @default(false)
+
+  pushNewRelease    Boolean @default(false)
+  pushWeeklyMix     Boolean @default(false)
+  pushConcert       Boolean @default(false)
+  pushAccountEvent  Boolean @default(false)
+
+  user  User @relation(fields: [userId], references: [id])
+}
+
+model PrivacySettings {
+  id                       Int     @id @default(autoincrement())
+  userId                   Int     @unique
+  allowRecommendations     Boolean @default(true)
+  managePersonalData       Boolean @default(false)
+  securityPrivacyAlerts    Boolean @default(true)
+  showListeningActivity    Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AuthMethod {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique
+  currentMethod String   // "email","phone","google","apple"
+  email         String?
+  phone         String?
+  googleId      String?
+  appleId       String?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// Favorites
+model Favorite {
+  id      Int    @id @default(autoincrement())
+  userId  Int
+  songId  Int?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// Recently Played
+model RecentlyPlayed {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  songId    Int?
+  playedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// Following Artist
+model FollowingArtist {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  artistId  Int
+  followedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
