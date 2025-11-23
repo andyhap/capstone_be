@@ -6,6 +6,7 @@ import cors from "cors";
 
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 dotenv.config();
 
@@ -29,6 +30,9 @@ app.use("/api/auth/users", authRoutes);
 
 // USER (profil, avatar, logout)
 app.use("/api/users", userRoutes);
+
+// ADMIN (admin login, logout)
+app.use("/api/auth/admin", adminRoutes);
 
 // 404
 app.use((req, res, next) => {

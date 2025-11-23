@@ -103,3 +103,10 @@ model FollowingArtist {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
