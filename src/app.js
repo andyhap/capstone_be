@@ -6,6 +6,7 @@ import cors from "cors";
 
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import adminAuthRoutes from "./routes/adminAuth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 
 dotenv.config();
@@ -32,7 +33,10 @@ app.use("/api/auth/users", authRoutes);
 app.use("/api/users", userRoutes);
 
 // ADMIN (admin login, logout)
-app.use("/api/auth/admin", adminRoutes);
+app.use("/api/auth/admin", adminAuthRoutes);
+
+// ADMIN ROUTES (manage artists, songs, albums)
+app.use("/api/admin", adminRoutes);
 
 // 404
 app.use((req, res, next) => {

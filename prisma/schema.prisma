@@ -110,3 +110,26 @@ model Admin {
   password  String
   createdAt DateTime @default(now())
 }
+
+model Song {
+  id        Int      @id @default(autoincrement())
+  title     String
+  coverUrl  String?
+  audioUrl  String
+  playCount Int      @default(0)
+  artistId  Int
+  artist    Artist   @relation(fields: [artistId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Artist {
+  id           Int      @id @default(autoincrement())
+  name         String
+  description  String?
+  avatarUrl    String?
+  avatarPublicId String?
+  followers    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  songs        Song[]
+}
