@@ -1,8 +1,11 @@
 import prisma from "../utils/prisma.js";
 import { withRetry } from "../utils/retry.js";
-import upload from "../middleware/upload.js";
-import { uploadToCloud } from "../utils/cloudinaryUpload.js";
+import { uploadToCloudinary } from "../utils/cloudinaryUpload.js";
+import { uploadSongAudio, deleteAudio } from "../utils/uploadAudio.js";
+import cloudinary from "../config/cloudinary.js";
+import { supabase } from "../config/supabase.js";
 
+// HELPER RESPONSES
 const ok = (res, msg, data) => res.status(200).json({ success: true, message: msg, data });
 const created = (res, msg, data) => res.status(201).json({ success: true, message: msg, data });
 const fail = (res, status, msg) => res.status(status).json({ success: false, message: msg });
@@ -11,30 +14,62 @@ const fail = (res, status, msg) => res.status(status).json({ success: false, mes
 // ADD SONG
 export const addSong = async (req, res) => {
     try {
-        const { title, coverUrl, audioUrl, artistId } = req.body;
+        const { title, artistId } = req.body;
 
-        if (!title || !audioUrl || !artistId)
-            return fail(res, 400, "Title, audioUrl, and artistId are required");
+        if (!title || !artistId)
+            return fail(res, 400, "Title and artistId are required");
 
-        const artistExists = await withRetry(() =>
-            prisma.artist.findUnique({ where: { id: Number(artistId) } })
-        );
+        const artist = await prisma.artist.findUnique({
+            where: { id: Number(artistId) }
+        });
 
-        if (!artistExists) return fail(res, 404, "Artist not found");
+        if (!artist) return fail(res, 404, "Artist not found");
 
-        const song = await withRetry(() =>
-            prisma.song.create({
-                data: {
-                    title,
-                    coverUrl,
-                    audioUrl,
-                    artistId: Number(artistId),
-                },
-            })
-        );
+        // --- Upload cover ---
+        let coverUrl = null;
+        let coverPublicId = null;
+
+        if (req.files?.cover?.[0]) {
+            const result = await uploadToCloudinary(req.files.cover[0], "song_covers");
+            coverUrl = result.secure_url;
+            coverPublicId = result.public_id;
+        }
+
+        // --- Upload audio ke Supabase ---
+        let audioUrl = null;
+        let audioPath = null;
+
+        if (req.files?.audio?.[0]) {
+            const file = req.files.audio[0];
+            const filePath = `${Date.now()}-${file.originalname}`;
+
+            const { data, error } = await supabase.storage
+                .from(process.env.SUPABASE_BUCKET)
+                .upload(filePath, file.buffer, {
+                    contentType: file.mimetype
+                });
+
+            if (error) return fail(res, 500, error.message);
+
+            audioPath = data.path;
+            audioUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/${process.env.SUPABASE_BUCKET}/${data.path}`;
+        }
+
+        const song = await prisma.song.create({
+            data: {
+                title,
+                artistId: Number(artistId),
+                coverUrl,
+                coverPublicId,
+                audioUrl,
+                audioPath
+            },
+        });
 
         return created(res, "Song added", song);
+
     } catch (err) {
+        console.error("Song upload error:", err);
         return fail(res, 500, err.message);
     }
 };
@@ -57,7 +92,7 @@ export const getAllSongs = async (req, res) => {
 };
 
 
-// GET SONG
+// GET ONE SONG
 export const getSong = async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -65,7 +100,7 @@ export const getSong = async (req, res) => {
         const song = await withRetry(() =>
             prisma.song.findUnique({
                 where: { id },
-                include: { artist: true }
+                include: { artist: true },
             })
         );
 
@@ -78,49 +113,64 @@ export const getSong = async (req, res) => {
 };
 
 
-// UPDATE SONG
-export const updateSongAudio = async (req, res) => {
+// UPDATE SONG COVER
+export const updateSongCover = async (req, res) => {
     try {
-        if (!req.file)
-            return fail(res, 400, "No audio uploaded");
-
         const id = Number(req.params.id);
 
-        const audioUrl = await uploadToCloud(req.file, "song_audio");
+        if (!req.file)
+            return fail(res, 400, "No cover uploaded");
 
-        const updated = await withRetry(() =>
-            prisma.song.update({
-                where: { id },
-                data: { audioUrl }
-            })
-        );
+        const song = await prisma.song.findUnique({ where: { id } });
+        if (!song) return fail(res, 404, "Song not found");
 
-        return ok(res, "Song audio updated", updated);
+        // Delete old cover
+        if (song.coverPublicId) {
+            await cloudinary.uploader.destroy(song.coverPublicId);
+        }
+
+        const result = await uploadToCloudinary(req.file, "song_covers");
+
+        const updated = await prisma.song.update({
+            where: { id },
+            data: {
+                coverUrl: result.secure_url,
+                coverPublicId: result.public_id,
+            },
+        });
+
+        return ok(res, "Song cover updated", updated);
     } catch (err) {
         return fail(res, 500, err.message);
     }
 };
 
 
-
-// SONG UPLOAD COVER
-export const updateSongCover = async (req, res) => {
+// UPDATE SONG AUDIO
+export const updateSongAudio = async (req, res) => {
     try {
-        if (!req.file)
-            return fail(res, 400, "No file uploaded");
-
         const id = Number(req.params.id);
 
-        const coverUrl = await uploadToCloud(req.file, "song_covers");
+        if (!req.file)
+            return fail(res, 400, "No audio uploaded");
 
-        const updated = await withRetry(() =>
-            prisma.song.update({
-                where: { id },
-                data: { coverUrl }
-            })
-        );
+        const song = await prisma.song.findUnique({ where: { id } });
+        if (!song) return fail(res, 404, "Song not found");
 
-        return ok(res, "Song cover updated", updated);
+        // Delete old audio
+        await deleteAudio(song.audioPath);
+
+        const audioResult = await uploadSongAudio(req.file);
+
+        const updated = await prisma.song.update({
+            where: { id },
+            data: {
+                audioUrl: audioResult.url,
+                audioPath: audioResult.path,
+            },
+        });
+
+        return ok(res, "Song audio updated", updated);
     } catch (err) {
         return fail(res, 500, err.message);
     }
@@ -131,6 +181,12 @@ export const updateSongCover = async (req, res) => {
 export const deleteSong = async (req, res) => {
     try {
         const id = Number(req.params.id);
+
+        const song = await prisma.song.findUnique({ where: { id } });
+        if (!song) return fail(res, 404, "Song not found");
+
+        await deleteAudio(song.audioPath);
+        if (song.coverPublicId) await cloudinary.uploader.destroy(song.coverPublicId);
 
         await withRetry(() =>
             prisma.song.delete({ where: { id } })
