@@ -112,14 +112,16 @@ model Admin {
 }
 
 model Song {
-  id        Int      @id @default(autoincrement())
-  title     String
-  coverUrl  String?
-  audioUrl  String
-  playCount Int      @default(0)
-  artistId  Int
-  artist    Artist   @relation(fields: [artistId], references: [id])
-  createdAt DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  title         String
+  coverUrl      String?
+  coverPublicId String?   
+  audioUrl      String?
+  audioPath     String?   // supabase internal path
+  artistId      Int
+  artist        Artist   @relation(fields: [artistId], references: [id])
+  playCount     Int      @default(0)
+  createdAt     DateTime @default(now())
 }
 
 model Artist {
