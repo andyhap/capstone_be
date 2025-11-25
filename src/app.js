@@ -9,6 +9,7 @@ import userRoutes from "./routes/user.routes.js";
 import adminAuthRoutes from "./routes/adminAuth.routes.js";
 import adminArtistRoutes from "./routes/adminArtist.routes.js";
 import adminSongRoutes from "./routes/adminSong.routes.js";
+import publicRoutes from "./routes/public.routes.js";
 
 dotenv.config();
 
@@ -39,6 +40,9 @@ app.use("/api/auth/admin", adminAuthRoutes);
 // ADMIN ROUTES (manage artists, songs, albums)
 app.use("/api/admin", adminArtistRoutes);
 app.use("/api/admin", adminSongRoutes);
+
+// PUBLIC ROUTES (browse artists, songs)
+app.use("/api/public", publicRoutes);
 
 // 404
 app.use((req, res, next) => {
