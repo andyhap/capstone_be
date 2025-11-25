@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { redis } from "../utils/redis.js";
 import { withRetry } from "../utils/retry.js";
 
-// Helper response 
+// HELPER RESPONSE
 const ok = (res, message, data) => res.status(200).json({ success: true, message, data });
 const created = (res, message, data) => res.status(201).json({ success: true, message, data });
 const fail = (res, status, message) => res.status(status).json({ success: false, message });

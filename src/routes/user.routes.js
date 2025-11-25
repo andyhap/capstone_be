@@ -10,18 +10,19 @@ import { upload } from "../middleware/upload.js";
 
 const router = Router();
 
-// semua ini diproteksi JWT
 
-// GET /api/users/me
+// --- PROFILE ROUTES---
+// USER PROFILE
 router.get("/me", auth, getProfile);
 
-// PUT /api/users/me
+// UPDATE USER PROFILE
 router.put("/me", auth, updateProfile);
 
-// POST /api/users/avatar (body: form-data, field: file)
+// USER AVATAR
 router.post("/avatar", auth, upload.single("file"), updateAvatar);
 
-// POST /api/users/logout
+// USER LOGOUT
 router.post("/logout", auth, logout);
+// --- END PROFILE ROUTES ---
 
 export default router;
