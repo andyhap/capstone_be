@@ -88,10 +88,11 @@ model Favorite {
 model RecentlyPlayed {
   id        Int      @id @default(autoincrement())
   userId    Int
-  songId    Int?
+  songId    Int
   playedAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
+  song Song @relation(fields: [songId], references: [id])
 }
 
 // Following Artist
@@ -122,6 +123,7 @@ model Song {
   artist        Artist   @relation(fields: [artistId], references: [id])
   playCount     Int      @default(0)
   createdAt     DateTime @default(now())
+  recentlyPlayed RecentlyPlayed[]
 }
 
 model Artist {
