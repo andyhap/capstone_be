@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
 
-import authRoutes from "./routes/auth.routes.js";
+import UserAuthRoutes from "./routes/userAuth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import adminAuthRoutes from "./routes/adminAuth.routes.js";
 import adminArtistRoutes from "./routes/adminArtist.routes.js";
@@ -30,7 +30,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // AUTH (register & login)
-app.use("/api/auth/users", authRoutes);
+app.use("/api/auth/users", UserAuthRoutes);
 
 // USER (profil, avatar, logout)
 app.use("/api/users", userRoutes);

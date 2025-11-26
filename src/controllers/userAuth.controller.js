@@ -68,10 +68,12 @@ export const login = async (req, res) => {
         const match = await bcrypt.compare(password, user.password);
         if (!match) return fail(res, 400, "Wrong password");
 
+        // USER JWT
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
             expiresIn: "1d",
         });
 
+        // SAVE USER SESSION IN REDIS
         await withRetry(() =>
             redis.set(`session:${user.id}`, token, { ex: 86400 })
         );

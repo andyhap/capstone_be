@@ -26,7 +26,7 @@ export const adminLogin = async (req, res) => {
         const match = await bcrypt.compare(password, admin.password);
         if (!match) return fail(res, 400, "Wrong password");
 
-        // ADMION JWT
+        // ADMIN JWT
         const token = jwt.sign(
             { adminId: admin.id },
                 process.env.JWT_SECRET_ADMIN,
@@ -36,7 +36,7 @@ export const adminLogin = async (req, res) => {
             }
         );
 
-        // Simpan session admin di Redis
+        // SAVE ADMIN SESSION IN REDIS
         await withRetry(() =>
         redis.set(`admin_session:${admin.id}`, token, { ex: 6 * 3600 })
         );
