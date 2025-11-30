@@ -14,26 +14,28 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  username      String    @unique
-  email         String?   @unique
-  phone         String?   @unique
-  password      String
-  gender        String?
-  birthdate     DateTime?
-  avatarUrl     String?
-  avatarPublicId String?
-  createdAt     DateTime  @default(now())
+  id              Int       @id @default(autoincrement())
+  username        String    @unique
+  email           String?   @unique
+  phone           String?   @unique
+  password        String
+  gender          String?
+  birthdate       DateTime?
+  avatarUrl       String?
+  avatarPublicId  String?
+  createdAt       DateTime  @default(now())
 
   // Relations
   notificationSettings NotificationSettings?
   privacySettings      PrivacySettings?
   authMethod           AuthMethod?
 
-  // User activity
   favorites       Favorite[]
   recentlyPlayed  RecentlyPlayed[]
   following       FollowingArtist[]
+
+  // PLAYLISTS (not albums)
+  playlists Playlist[]
 }
 
 model NotificationSettings {
@@ -49,7 +51,7 @@ model NotificationSettings {
   pushConcert       Boolean @default(false)
   pushAccountEvent  Boolean @default(false)
 
-  user  User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model PrivacySettings {
@@ -66,7 +68,7 @@ model PrivacySettings {
 model AuthMethod {
   id            Int      @id @default(autoincrement())
   userId        Int      @unique
-  currentMethod String   // "email","phone","google","apple"
+  currentMethod String
   email         String?
   phone         String?
   googleId      String?
@@ -75,16 +77,14 @@ model AuthMethod {
   user User @relation(fields: [userId], references: [id])
 }
 
-// Favorites
 model Favorite {
   id      Int    @id @default(autoincrement())
   userId  Int
-  songId  Int?
+  songId  Int
 
   user User @relation(fields: [userId], references: [id])
 }
 
-// Recently Played
 model RecentlyPlayed {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -95,7 +95,6 @@ model RecentlyPlayed {
   song Song @relation(fields: [songId], references: [id])
 }
 
-// Following Artist
 model FollowingArtist {
   id        Int      @id @default(autoincrement())
   userId    Int
@@ -116,14 +115,16 @@ model Song {
   id            Int      @id @default(autoincrement())
   title         String
   coverUrl      String?
-  coverPublicId String?   
+  coverPublicId String?
   audioUrl      String?
-  audioPath     String?   // supabase internal path
+  audioPath     String?
   artistId      Int
   artist        Artist   @relation(fields: [artistId], references: [id])
   playCount     Int      @default(0)
   createdAt     DateTime @default(now())
+
   recentlyPlayed RecentlyPlayed[]
+  playlistSongs PlaylistSong[]
 }
 
 model Artist {
@@ -136,4 +137,25 @@ model Artist {
   createdAt    DateTime @default(now())
 
   songs        Song[]
+}
+
+model Playlist {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  name        String
+  description String?
+  coverUrl    String?
+  createdAt   DateTime     @default(now())
+
+  user   User          @relation(fields: [userId], references: [id])
+  songs  PlaylistSong[]
+}
+
+model PlaylistSong {
+  id         Int   @id @default(autoincrement())
+  playlistId Int
+  songId     Int
+
+  playlist Playlist @relation(fields: [playlistId], references: [id])
+  song     Song     @relation(fields: [songId], references: [id])
 }

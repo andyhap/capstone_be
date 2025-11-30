@@ -5,6 +5,15 @@ import {
     updateAvatar,
     logout,
 } from "../controllers/user.controller.js";
+import {
+    createPlaylist,
+    getMyPlaylists,
+    getPlaylistDetail,
+    addSongToPlaylist,
+    removeSongFromPlaylist,
+    deletePlaylist,
+    generateRecommendedPlaylist,
+} from "../controllers/playlist.controller.js";
 import { auth } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
 
@@ -24,5 +33,25 @@ router.post("/avatar", auth, upload.single("file"), updateAvatar);
 // USER LOGOUT
 router.post("/logout", auth, logout);
 // --- END PROFILE ROUTES ---
+
+
+// --- PLAYLIST ROUTES ---
+// CREATE PLAYLIST
+router.post("/playlist", auth, createPlaylist);
+
+// LIST PLAYLISTS
+router.get("/playlist", auth, getMyPlaylists);
+router.get("/playlist/:id", auth, getPlaylistDetail);
+
+// ADD & REMOVE SONG TO/FROM PLAYLIST
+router.post("/playlist/:id/add-song", auth, addSongToPlaylist);
+router.delete("/playlist/song/:playlistSongId", auth, removeSongFromPlaylist);
+
+// DELETE PLAYLIST
+router.delete("/playlist/:id", auth, deletePlaylist);
+
+// GENERATE RECOMMENDED PLAYLIST
+router.post("/playlist/recommend", auth, generateRecommendedPlaylist);
+// --- END PLAYLIST ROUTES ---
 
 export default router;
