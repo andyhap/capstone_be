@@ -68,12 +68,17 @@ export const getArtist = async (req, res) => {
     try {
         const id = Number(req.params.id);
 
-        const artist = await withRetry(() =>
-            prisma.artist.findUnique({
-                where: { id },
-                include: { songs: true },
-            })
-        );
+        const artist = await prisma.artist.findUnique({
+            where: { id },
+            include: {
+                songs: true,
+                _count: {
+                    select: {
+                        followersList: true
+                    }
+                }
+            }
+        });
 
         if (!artist) return fail(res, 404, "Artist not found");
 

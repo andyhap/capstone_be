@@ -1,6 +1,7 @@
 import prisma from "../utils/prisma.js";
 import { withRetry } from "../utils/retry.js";
 
+// GET ALL PUBLIC SONGS
 export const getAllPublicSongs = async (req, res) => {
     try {
         const page = Number(req.query.page) || 1;
@@ -34,6 +35,7 @@ export const getAllPublicSongs = async (req, res) => {
 };
 
 
+// GET ONE PUBLIC SONG
 export const getPublicSong = async (req, res) => {
     try {
         const song = await withRetry(() =>

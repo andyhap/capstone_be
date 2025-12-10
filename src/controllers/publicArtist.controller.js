@@ -1,6 +1,7 @@
 import prisma from "../utils/prisma.js";
 import { withRetry } from "../utils/retry.js";
 
+// GET ALL PUBLIC ARTISTS
 export const getAllPublicArtists = async (req, res) => {
     try {
         const page = Number(req.query.page) || 1;
@@ -8,12 +9,14 @@ export const getAllPublicArtists = async (req, res) => {
         const skip = (page - 1) * limit;
 
         const [artists, total] = await Promise.all([
-            prisma.artist.findMany({
-                skip,
-                take: limit,
-                orderBy: { name: "asc" }
-            }),
-            prisma.artist.count()
+            withRetry(() =>
+                prisma.artist.findMany({
+                    skip,
+                    take: limit,
+                    orderBy: { name: "asc" }
+                })
+            ),
+            withRetry(() => prisma.artist.count())
         ]);
 
         return res.json({
@@ -24,7 +27,7 @@ export const getAllPublicArtists = async (req, res) => {
                 total,
                 totalPages: Math.ceil(total / limit),
             },
-            data: artists
+            data: artists,
         });
 
     } catch (err) {
@@ -32,20 +35,38 @@ export const getAllPublicArtists = async (req, res) => {
     }
 };
 
-
+// GET ONE PUBLIC ARTIST
 export const getPublicArtist = async (req, res) => {
     try {
+        const id = Number(req.params.id);
+
         const artist = await withRetry(() =>
             prisma.artist.findUnique({
-                where: { id: Number(req.params.id) },
-                include: { songs: true }
+                where: { id },
+                include: {
+                    songs: true,
+                    _count: {
+                        select: {
+                            followersList: true
+                        }
+                    }
+                }
             })
         );
 
-        if (!artist) return res.status(404).json({ success: false, message: "Artist not found" });
+        if (!artist)
+            return res.status(404).json({ success: false, message: "Artist not found" });
 
-        return res.json({ success: true, data: artist });
+        return res.json({
+            success: true,
+            data: {
+                ...artist,
+                followers: artist._count.followersList
+            }
+        });
+
     } catch (err) {
         return res.status(500).json({ success: false, message: err.message });
     }
 };
+

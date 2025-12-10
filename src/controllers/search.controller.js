@@ -1,5 +1,6 @@
 import prisma from "../utils/prisma.js";
 
+// SEARCH ALL ARTISTS AND SONGS
 export const searchAll = async (req, res) => {
     try {
         const query = req.query.query || "";
