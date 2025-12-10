@@ -54,7 +54,7 @@ router.get("/playlist", auth, getMyPlaylists);
 router.get("/playlist/:id", auth, getPlaylistDetail);
 
 // ADD & REMOVE SONG TO/FROM PLAYLIST
-router.post("/playlist/:id/add-song", auth, addSongToPlaylist);
+router.post("/playlist/:playlistId/addsong/:songId", auth, addSongToPlaylist);
 router.delete("/playlist/song/:playlistSongId", auth, removeSongFromPlaylist);
 
 // DELETE PLAYLIST

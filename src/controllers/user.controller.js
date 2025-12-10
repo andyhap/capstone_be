@@ -24,6 +24,9 @@ export const getProfile = async (req, res) => {
                 favorites: true,
                 recentlyPlayed: true,
                 following: true,
+                _count: {
+                    select: { following: true }
+                    }
                 },
             })
         );

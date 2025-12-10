@@ -108,24 +108,35 @@ export const getPlaylistDetail = async (req, res) => {
 // ADD SONG
 export const addSongToPlaylist = async (req, res) => {
     try {
-        const playlistId = Number(req.params.id);
-        const { songId } = req.body;
+        const playlistId = Number(req.params.playlistId);
+        const songId = Number(req.params.songId);
 
-        const playlist = await prisma.playlist.findUnique({ where: { id: playlistId } });
-        if (!playlist || playlist.userId !== req.user.id)
+        if (isNaN(playlistId) || isNaN(songId)) {
+            return fail(res, 400, "Invalid playlist or song ID");
+        }
+
+        // cek playlist
+        const playlist = await prisma.playlist.findUnique({
+            where: { id: playlistId }
+        });
+
+        if (!playlist || playlist.userId !== req.user.id) {
             return fail(res, 404, "Playlist not found");
+        }
 
+        // cek apakah lagu sudah ada di playlist
         const exists = await prisma.playlistSong.findFirst({
             where: { playlistId, songId }
         });
 
         if (exists) return fail(res, 400, "Song already in playlist");
 
+        // tambahkan lagu
         const added = await prisma.playlistSong.create({
             data: { playlistId, songId }
         });
 
-        // update cover playlist setelah menambah lagu
+        // update cover playlist setelah tambah lagu
         await updatePlaylistCover(playlistId);
 
         return ok(res, "Song added to playlist", added);
@@ -134,6 +145,7 @@ export const addSongToPlaylist = async (req, res) => {
         return fail(res, 500, err.message);
     }
 };
+
 
 
 // REMOVE SONG 
