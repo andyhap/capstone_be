@@ -14,6 +14,16 @@ import {
     deletePlaylist,
     generateRecommendedPlaylist,
 } from "../controllers/playlist.controller.js";
+import {
+    likeSong,
+    unlikeSong,
+    getFavorites,
+} from "../controllers/likeSong.controller.js";
+import {
+    followArtist,
+    unfollowArtist,
+    getFollowingArtists,
+} from "../controllers/follow.controller.js";
 import { auth } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
 
@@ -53,5 +63,17 @@ router.delete("/playlist/:id", auth, deletePlaylist);
 // GENERATE RECOMMENDED PLAYLIST
 router.post("/playlist/recommend", auth, generateRecommendedPlaylist);
 // --- END PLAYLIST ROUTES ---
+
+// --- FAVORITES ---
+router.post("/favorites/:songId", auth, likeSong);
+router.delete("/favorites/:songId", auth, unlikeSong);
+router.get("/favorites", auth, getFavorites);
+// --- END FAVORITES ---
+
+// --- FOLLOWING ARTISTS ---
+router.post("/follow/:artistId", auth, followArtist);
+router.delete("/follow/:artistId", auth, unfollowArtist);
+router.get("/following", auth, getFollowingArtists);
+// --- END FOLLOWING ARTISTS ---
 
 export default router;

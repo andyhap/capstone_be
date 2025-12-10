@@ -83,6 +83,7 @@ model Favorite {
   songId  Int
 
   user User @relation(fields: [userId], references: [id])
+  song Song @relation(fields: [songId], references: [id])
 }
 
 model RecentlyPlayed {
@@ -101,7 +102,8 @@ model FollowingArtist {
   artistId  Int
   followedAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  artist Artist @relation(fields: [artistId], references: [id])
 }
 
 model Admin {
@@ -123,20 +125,22 @@ model Song {
   playCount     Int      @default(0)
   createdAt     DateTime @default(now())
 
-  recentlyPlayed RecentlyPlayed[]
-  playlistSongs PlaylistSong[]
+  recentlyPlayed  RecentlyPlayed[]
+  playlistSongs   PlaylistSong[]
+  favorites       Favorite[] 
 }
 
 model Artist {
-  id           Int      @id @default(autoincrement())
-  name         String
-  description  String?
-  avatarUrl    String?
-  avatarPublicId String?
-  followers    Int      @default(0)
-  createdAt    DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String?
+  avatarUrl       String?
+  avatarPublicId  String?
+  followers       Int      @default(0)
+  createdAt       DateTime @default(now())
 
-  songs        Song[]
+  songs         Song[]
+  followersList FollowingArtist[]
 }
 
 model Playlist {
