@@ -363,3 +363,9 @@ semua end point playlist memerlukan authorization Header
     POST /api/users/playlist/recommend
     ```
     API ini digunakan unutk membuat playlist rekomendasi berdasarkan jumlah mendengarkan lagu si user
+
+---
+
+---
+
+🔗 **Postmant Documentation:** [Click here to view the Postmant Documentation](https://documenter.getpostman.com/view/49108277/2sB3dQwpth)
